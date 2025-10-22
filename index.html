@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎁 Happy Birthday, Labib! 🎁</title>
+    <style>
+        :root {
+            --bg-pink: #FFC0CB;
+            --bg-gold: #FFD700;
+            --ribbon-color: #8B0000;
+            --text-color: #4B0082;
+            --unwrapped-color: #FF69B4;
+            --font-script: "Georgia", "Comic Sans MS", cursive;
+        }
+
+        body {
+            background-color: var(--bg-pink);
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            width: 100%;
+            background-color: var(--bg-gold);
+            color: white;
+            padding: 15px 0;
+            font-size: 22px;
+            font-weight: bold;
+            font-style: italic;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #progress {
+            font-size: 18px;
+            color: var(--text-color);
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        #game-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 600px;
+            margin: 20px auto;
+        }
+
+        .present-section {
+            background-color: var(--ribbon-color);
+            color: white;
+            font-weight: bold;
+            padding: 20px;
+            cursor: pointer;
+            border: 5px solid var(--ribbon-color);
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.1s;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .present-section:hover {
+            transform: scale(1.03);
+        }
+
+        .found {
+            background-color: var(--bg-gold) !important;
+            color: var(--text-color) !important;
+            cursor: default;
+        }
+
+        .miss {
+            background-color: #F08080 !important;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* --- Final Message Full Screen Style --- */
+        #winning-message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--unwrapped-color);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        #winning-message h1 {
+            font-size: 70px;
+            color: var(--bg-gold);
+            margin: 20px 0;
+            font-family: var(--font-script);
+        }
+
+        #winning-message p {
+            font-size: 30px;
+            margin: 10px 0;
+        }
+
+        #close-btn {
+            background-color: white;
+            color: var(--unwrapped-color);
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 50px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>Happy Birthday, Labib! Unwrap the Present!</header>
+
+    <div id="progress">Ribbon Pieces Unwrapped: 0 of 3</div>
+
+    <div id="game-grid">
+        </div>
+
+    <div id="winning-message" class="hidden">
+        <p style="font-size: 35px; font-weight: bold;">CONGRATULATIONS, LABIB!</p>
+        <h1>✨🎊 HAPPY BIRTHDAY! 🎊✨</h1>
+        <p>You're the most amazing gift in my life.</p>
+        <p style="color: var(--bg-pink); font-size: 50px; margin-top: 30px; font-weight: bold;">I love you! 🥰</p>
+        <button id="close-btn" onclick="window.close()">Close & Let's Celebrate! 🎉</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('game-grid');
+            const progressLabel = document.getElementById('progress');
+            const winningMessage = document.getElementById('winning-message');
+            const totalSections = 12;
+            const ribbonsToFind = 3;
+            
+            let foundRibbons = 0;
+            let winningIndices = [];
+
+            // 1. Randomly select the 3 winning buttons
+            while(winningIndices.length < ribbonsToFind){
+                const randomIndex = Math.floor(Math.random() * totalSections);
+                if(!winningIndices.includes(randomIndex)){
+                    winningIndices.push(randomIndex);
+                }
+            }
+
+            // 2. Create the buttons
+            for (let i = 0; i < totalSections; i++) {
+                const btn = document.createElement('div');
+                btn.classList.add('present-section');
+                btn.textContent = '🎀 Unwrap 🎀';
+                btn.dataset.index = i;
+                btn.addEventListener('click', () => handleButtonClick(btn, i));
+                grid.appendChild(btn);
+            }
+
+            // 3. Game Logic Handler
+            function handleButtonClick(button, index) {
+                if (button.classList.contains('found')) return; // Already clicked and correct
+
+                if (winningIndices.includes(index)) {
+                    // Correct ribbon found!
+                    button.classList.add('found');
+                    button.textContent = 'UNWRAPPED! ✨';
+                    foundRibbons++;
+                    progressLabel.textContent = `Ribbon Pieces Unwrapped: ${foundRibbons} of ${ribbonsToFind}`;
+
+                    if (foundRibbons === ribbonsToFind) {
+                        // Game Won! Show the full-screen message.
+                        setTimeout(() => {
+                            winningMessage.classList.remove('hidden');
+                        }, 500);
+                    }
+                } else {
+                    // Incorrect section
+                    button.classList.add('miss');
+                    button.textContent = 'Try Again!';
+                    setTimeout(() => {
+                        button.classList.remove('miss');
+                        button.textContent = '🎀 Unwrap 🎀';
+                    }, 700);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
