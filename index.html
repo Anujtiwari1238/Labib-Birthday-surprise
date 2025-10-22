@@ -85,7 +85,6 @@
             display: none;
         }
 
-        /* --- Final Message Full Screen Style --- */
         #winning-message {
             position: fixed;
             top: 0;
@@ -133,7 +132,7 @@
     <div id="progress">Ribbon Pieces Unwrapped: 0 of 3</div>
 
     <div id="game-grid">
-        </div>
+    </div>
 
     <div id="winning-message" class="hidden">
         <p style="font-size: 35px; font-weight: bold;">CONGRATULATIONS, LABIB!</p>
@@ -150,44 +149,89 @@
             const winningMessage = document.getElementById('winning-message');
             const totalSections = 12;
             const ribbonsToFind = 3;
-            
+            const storageKey = 'labib_bday_won'; // Key to save game state
+
             let foundRibbons = 0;
             let winningIndices = [];
+            let gameData = {};
 
-            // 1. Randomly select the 3 winning buttons
-            while(winningIndices.length < ribbonsToFind){
-                const randomIndex = Math.floor(Math.random() * totalSections);
-                if(!winningIndices.includes(randomIndex)){
-                    winningIndices.push(randomIndex);
+            // --- Function to save game state to local storage ---
+            function saveGameState() {
+                localStorage.setItem(storageKey, JSON.stringify(gameData));
+            }
+
+            // --- Function to load game state from local storage ---
+            function loadGameState() {
+                const storedData = localStorage.getItem(storageKey);
+                if (storedData) {
+                    gameData = JSON.parse(storedData);
+                    winningIndices = gameData.winningIndices;
+                    foundRibbons = gameData.foundSections.length;
+
+                    // If the game was already won, show the final message immediately
+                    if (foundRibbons === ribbonsToFind) {
+                        showWinningMessage(0); 
+                        return true;
+                    }
+                    return false;
                 }
+                // If no stored data, initialize a new game
+                initializeNewGame();
+                return false;
             }
 
-            // 2. Create the buttons
-            for (let i = 0; i < totalSections; i++) {
-                const btn = document.createElement('div');
-                btn.classList.add('present-section');
-                btn.textContent = '🎀 Unwrap 🎀';
-                btn.dataset.index = i;
-                btn.addEventListener('click', () => handleButtonClick(btn, i));
-                grid.appendChild(btn);
+            function initializeNewGame() {
+                // 1. Randomly select the 3 winning buttons
+                while(winningIndices.length < ribbonsToFind){
+                    const randomIndex = Math.floor(Math.random() * totalSections);
+                    if(!winningIndices.includes(randomIndex)){
+                        winningIndices.push(randomIndex);
+                    }
+                }
+                gameData = {
+                    winningIndices: winningIndices,
+                    foundSections: []
+                };
+                saveGameState();
             }
 
-            // 3. Game Logic Handler
+            // --- Function to render the UI based on current state ---
+            function renderGame() {
+                grid.innerHTML = '';
+                for (let i = 0; i < totalSections; i++) {
+                    const btn = document.createElement('div');
+                    btn.classList.add('present-section');
+                    btn.textContent = '🎀 Unwrap 🎀';
+                    btn.dataset.index = i;
+                    btn.addEventListener('click', () => handleButtonClick(btn, i));
+                    grid.appendChild(btn);
+
+                    // Apply status for already found sections
+                    if (gameData.foundSections.includes(i)) {
+                        btn.classList.add('found');
+                        btn.textContent = 'UNWRAPPED! ✨';
+                        btn.style.cursor = 'default';
+                    }
+                }
+                progressLabel.textContent = `Ribbon Pieces Unwrapped: ${foundRibbons} of ${ribbonsToFind}`;
+            }
+
             function handleButtonClick(button, index) {
-                if (button.classList.contains('found')) return; // Already clicked and correct
+                if (button.classList.contains('found')) return; 
 
                 if (winningIndices.includes(index)) {
                     // Correct ribbon found!
                     button.classList.add('found');
                     button.textContent = 'UNWRAPPED! ✨';
                     foundRibbons++;
+                    gameData.foundSections.push(index);
+
                     progressLabel.textContent = `Ribbon Pieces Unwrapped: ${foundRibbons} of ${ribbonsToFind}`;
+                    saveGameState();
 
                     if (foundRibbons === ribbonsToFind) {
-                        // Game Won! Show the full-screen message.
-                        setTimeout(() => {
-                            winningMessage.classList.remove('hidden');
-                        }, 500);
+                        // Game Won!
+                        showWinningMessage(500);
                     }
                 } else {
                     // Incorrect section
@@ -198,6 +242,17 @@
                         button.textContent = '🎀 Unwrap 🎀';
                     }, 700);
                 }
+            }
+
+            function showWinningMessage(delay) {
+                setTimeout(() => {
+                    winningMessage.classList.remove('hidden');
+                }, delay);
+            }
+
+            // --- Start the game ---
+            if (!loadGameState()) {
+                renderGame();
             }
         });
     </script>
